@@ -1,0 +1,32 @@
+services:
+    maxishop:
+        build:
+            context: .
+            dockerfile: DockerFile
+            target: developpement
+        ports:
+            - "8001:80"
+        volumes:
+            - ./MaxiShop/:/var/www/html
+        networks:
+            - maxi
+        environment:
+            - TZ=America/Toronto
+    
+    bdmaxi:
+        build:
+            context: .
+            dockerfile: DockerFile
+            target: bdmariabase
+        ports:
+            - "3311:3306"
+        networks:
+            - maxi
+        env_file: 
+            - .env
+
+    
+networks:
+    maxi:
+        name: maxi
+        driver: bridge

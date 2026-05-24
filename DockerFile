@@ -1,0 +1,49 @@
+FROM php:8.4-apache AS base
+
+RUN docker-php-ext-install pdo_mysql && docker-php-ext-enable pdo_mysql
+
+RUN apt-get update && apt-get install -y \
+    zip \
+    unzip
+
+# RUN apk update && apk add --no-cache git
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+ENV PATH="$PATH:/usr/local/bin"
+
+WORKDIR /var/www/
+
+EXPOSE 80
+
+
+# #################
+FROM base AS developpement
+
+RUN mv $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini
+RUN echo "error_log = ../logs/errorlog.log" >> $PHP_INI_DIR/php.ini
+
+
+RUN mkdir ./logs
+RUN chmod -R 755 logs
+RUN touch ./logs/errorlog.log
+RUN chmod -R 766 logs/errorlog.log
+
+RUN a2enmod rewrite
+RUN a2enmod actions
+COPY apache2.conf  /etc/apache2/apache2.conf
+
+RUN composer require slim/slim:"4.*"
+RUN composer require slim/psr7
+
+COPY ./config.bd.include.php ./
+
+
+
+# ######### MySQL #############
+FROM mariadb:lts AS bdmariabase
+
+COPY ./bd/maxi.sql /docker-entrypoint-initdb.d/
+COPY ./bd/procedures.maxi.sql /docker-entrypoint-initdb.d/
+
+
