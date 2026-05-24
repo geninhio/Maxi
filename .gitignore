@@ -1,2 +1,2 @@
-./config.bd.include.php
-./.env
+config.bd.include.php
+.env
